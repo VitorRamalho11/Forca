@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Restante do corpo permanece igual -->
     <h1>Jogo da Forca</h1>
     <img id="imagem" src="forca0.png" alt="Imagem da forca">
     <div id="exibicao-palavra"></div>
@@ -35,7 +34,7 @@
             palavraEscolhida = listaPalavras[Math.floor(Math.random() * listaPalavras.length)];
             exibicaoPalavra = Array(palavraEscolhida.length).fill('_');
             letrasChutadas = [];
-            tentativasRestantes = 6; // 6 erros permitidos (0-6)
+            tentativasRestantes = 6;
             numeroErros = 0;
 
             atualizarExibicao();
@@ -53,32 +52,23 @@
             }
         }
 
-        <script>
-    // ... (o resto do código permanece igual)
+        function chutarLetra() {
+            const entradaLetra = document.getElementById('entrada-letra');
+            let letra = entradaLetra.value.toUpperCase();
 
-    function chutarLetra() {
-        const entradaLetra = document.getElementById('entrada-letra');
-        let letra = entradaLetra.value.toUpperCase(); // Convertendo para maiúscula
+            // Aceita letras acentuadas
+            if (!letra.match(/[A-ZÀ-ÁÂÃÄÅÆÇÈ-ÊËÌ-ÏÐÑÒ-ÖØÙ-ÜÝÞßà-áâãäåæçè-êëì-ïðñò-öøù-üýþÿ]/) || letra.length !== 1) {
+                alert('Por favor, insira uma única letra válida.');
+                return;
+            }
 
-        // Modificação principal: regex que aceita letras acentuadas
-        if (!letra.match(/[A-ZÀ-ÚÃÕÂÊÎÔÛÁÉÍÓÚÇ]/) || letra.length !== 1) {
-            alert('Por favor, insira uma única letra válida.');
-            return;
-        }
-
-        if (letrasChutadas.includes(letra)) {
-            alert('Você já tentou esta letra. Tente outra.');
-            return;
-        }
-
-        // ... (o resto da função permanece igual)
-    }
-
-    // ... (o resto do código permanece igual)
-</script>
+            if (letrasChutadas.includes(letra)) {
+                alert('Você já tentou esta letra. Tente outra.');
+                return;
+            }
 
             letrasChutadas.push(letra);
-            letrasChutadas.sort(); // Opcional: ordena as letras
+            letrasChutadas.sort();
 
             if (palavraEscolhida.includes(letra)) {
                 for (let i = 0; i < palavraEscolhida.length; i++) {
@@ -101,13 +91,11 @@
             document.getElementById('botao-reiniciar').style.display = 'block';
         }
 
-        // Foca no input ao carregar a página
         window.onload = function() {
             iniciarJogo();
             document.getElementById('entrada-letra').focus();
         };
 
-        // Permite enviar com Enter
         document.getElementById('entrada-letra').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 chutarLetra();
