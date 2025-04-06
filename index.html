@@ -34,7 +34,7 @@
             palavraEscolhida = listaPalavras[Math.floor(Math.random() * listaPalavras.length)];
             exibicaoPalavra = Array(palavraEscolhida.length).fill('_');
             letrasChutadas = [];
-            tentativasRestantes = 6;
+            tentativasRestantes = 7;
             numeroErros = 0;
 
             atualizarExibicao();
@@ -45,7 +45,7 @@
             document.getElementById("letras-chutadas").innerText = letrasChutadas.join(', ');
             document.getElementById("imagem").src = `forca${numeroErros}.png`;
 
-            if (numeroErros >= 6) {
+            if (numeroErros >= 7) {
                 encerrarJogo(`Você perdeu! A palavra era: ${palavraEscolhida}`);
             } else if (!exibicaoPalavra.includes('_')) {
                 encerrarJogo('Parabéns! Você venceu!');
