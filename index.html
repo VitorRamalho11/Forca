@@ -53,19 +53,29 @@
             }
         }
 
-        function chutarLetra() {
-            const entradaLetra = document.getElementById('entrada-letra');
-            let letra = entradaLetra.value.toUpperCase(); // Convertendo para maiúscula
+        <script>
+    // ... (o resto do código permanece igual)
 
-            if (!letra.match(/[A-Z]/) || letra.length !== 1) {
-                alert('Por favor, insira uma única letra válida.');
-                return;
-            }
+    function chutarLetra() {
+        const entradaLetra = document.getElementById('entrada-letra');
+        let letra = entradaLetra.value.toUpperCase(); // Convertendo para maiúscula
 
-            if (letrasChutadas.includes(letra)) {
-                alert('Você já tentou esta letra. Tente outra.');
-                return;
-            }
+        // Modificação principal: regex que aceita letras acentuadas
+        if (!letra.match(/[A-ZÀ-ÚÃÕÂÊÎÔÛÁÉÍÓÚÇ]/) || letra.length !== 1) {
+            alert('Por favor, insira uma única letra válida.');
+            return;
+        }
+
+        if (letrasChutadas.includes(letra)) {
+            alert('Você já tentou esta letra. Tente outra.');
+            return;
+        }
+
+        // ... (o resto da função permanece igual)
+    }
+
+    // ... (o resto do código permanece igual)
+</script>
 
             letrasChutadas.push(letra);
             letrasChutadas.sort(); // Opcional: ordena as letras
