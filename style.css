@@ -4,6 +4,11 @@ body {
     margin: 50px;
 }
 
+img {
+  width: 256px;
+  height: 256px;
+}
+
 #exibicao-palavra {
     font-size: 3em;
     margin-bottom: 30px;
