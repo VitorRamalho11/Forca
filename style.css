@@ -16,13 +16,17 @@ img {
 
 #letras-chutadas {
     font-size: 3em;
-    color: #fffdd9;
+    color: #00ffff;       /* Ciano puro */
     font-weight: bold;
     margin-bottom: 20px;
-    -webkit-text-stroke-width: 1px;
-    -webkit-text-stroke-color: #000;
-
+    text-shadow: 
+        -1px -1px 0 #000, /* Sombra superior esquerda */
+        1px -1px 0 #000,  /* Sombra superior direita */
+        -1px 1px 0 #000,  /* Sombra inferior esquerda */
+        1px 1px 0 #000;   /* Sombra inferior direita */
+    letter-spacing: 5px;  /* Espaçamento entre letras */
 }
+
 
 #mensagem {
     display: none;
