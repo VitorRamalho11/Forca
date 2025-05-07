@@ -2,7 +2,12 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
     margin: 50px;
+
+  background-image: url('https://i5.walmartimages.com/seo/Kraft-Vegemite-Yeast-Extract-7-76-oz_ff76fe1e-c081-4586-8acc-e6f7e13b507c.27f2c268aa3690127fa2504ffd36e176.jpeg?odnHeight=2000&odnWidth=2000&odnBg=FFFFFF');
+  background-repeat: repeat-x;
+  background-position: top;
 }
+
 
 img {
   width: 256px;
