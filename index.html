@@ -1,106 +1,389 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo da Forca</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Afinador Pro para Stratocaster</title>
+    <script src="https://cdn.jsdelivr.net/npm/pitchfinder@2.1.2/lib/pitchfinder.min.js"></script>
+    <style>
+        /* CSS para o Estilo do Site (Estilo similar ao anterior com pequenas melhorias) */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #1a1a1a;
+            --primary-color: #2a2a2a;
+            --secondary-color: #3f3f3f;
+            --font-color: #e0e0e0;
+            --green-color: #28a745;
+            --yellow-color: #ffc107;
+            --blue-color: #007bff;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--font-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .tuner-app {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 5px; }
+        h1 + p { margin-top: 0; margin-bottom: 30px; color: #aaa; }
+
+        .step-selection button, .string-selection button, .controls button, .back-button, #start-tuner-btn {
+            background-color: var(--secondary-color);
+            color: var(--font-color);
+            border: none;
+            padding: 15px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: 'Roboto Mono', monospace;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 250px;
+        }
+        
+        #start-tuner-btn { background-color: var(--blue-color); }
+
+        .step-selection button:hover, .string-selection button:hover, .controls button:hover, .back-button:hover, #start-tuner-btn:hover {
+            background-color: #555;
+            transform: translateY(-2px);
+        }
+
+        .string-selection button.active { background-color: var(--blue-color); }
+        #display-area { background-color: var(--bg-color); border-radius: var(--border-radius); padding: 30px; margin-top: 20px; }
+
+        .status-indicator {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 10px auto;
+            background-color: var(--secondary-color);
+            transition: background-color 0.4s ease;
+            position: relative;
+        }
+        
+        .status-indicator.green { background-color: var(--green-color); box-shadow: 0 0 25px var(--green-color); }
+        .status-indicator.yellow { background-color: var(--yellow-color); }
+        .status-indicator.blue { background-color: var(--blue-color); }
+
+        #tuner-readout {
+            min-height: 25px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        #instruction-text { font-size: 1.2rem; min-height: 50px; font-weight: bold; }
+        #result-text { font-size: 1.5rem; font-weight: bold; min-height: 40px; }
+        
+        .result-text.green { color: var(--green-color); }
+        .result-text.yellow { color: var(--yellow-color); }
+        .result-text.blue { color: var(--blue-color); }
+        .hidden { display: none !important; }
+
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid var(--secondary-color); }
+        th { background-color: var(--secondary-color); }
+    </style>
 </head>
 <body>
-    <h1>Jogo da Forca</h1>
-    <img id="imagem" src="forca0.png" alt="Imagem da forca">
-    <div id="exibicao-palavra"></div>
-    <input type="text" id="entrada-letra" placeholder="Chute uma letra" maxlength="1">
-    <button id="btn-chutar" onclick="chutarLetra()">Chutar</button>
 
-    <h2>Letras Chutadas</h2>
-    <div id="letras-chutadas"></div>
-    <div id="mensagem" style="display:none;"></div><br>
-    <div style="text-align: center;">
-        <button id="botao-reiniciar" onclick="iniciarJogo()" style="display:none;">Recomeçar</button>
+    <div class="tuner-app">
+        <h1>Setup Pro para Stratocaster</h1>
+        <p>Ponte "Decked" (Downbend) e cordas 0.10</p>
+
+        <div id="step-selection">
+            <button onclick="showStep('altura')">1. Altura da Ponte e Cordas</button>
+            <button onclick="showStep('afinacao')">2. Afinar Corda Solta</button>
+            <button onclick="showStep('oitava')">3. Ajustar Oitavas</button>
+            <button onclick="showStep('mola')">4. Ajuste da Mola do Tremolo</button>
+            <button onclick="showStep('captador')">5. Altura dos Captadores</button>
+        </div>
+
+        <div id="string-selection" class="string-selection hidden">
+            <button data-string="E6" onclick="selectString(this)">6ª (E)</button>
+            <button data-string="A5" onclick="selectString(this)">5ª (A)</button>
+            <button data-string="D4" onclick="selectString(this)">4ª (D)</button>
+            <button data-string="G3" onclick="selectString(this)">3ª (G)</button>
+            <button data-string="B2" onclick="selectString(this)">2ª (B)</button>
+            <button data-string="E1" onclick="selectString(this)">1ª (E)</button>
+        </div>
+
+        <div id="display-area" class="hidden">
+            <h2 id="display-title"></h2>
+            <div id="info-content"></div>
+            <div id="tuner-interface" class="hidden">
+                <button id="start-tuner-btn" onclick="startTuner()">Ligar Microfone</button>
+                <div id="tuner-elements" class="hidden">
+                    <div id="status-indicator" class="status-indicator"></div>
+                    <div id="tuner-readout"></div>
+                    <p id="instruction-text"></p>
+                    <p id="result-text"></p>
+                </div>
+            </div>
+        </div>
+        
+        <button id="back-button" class="back-button hidden" onclick="goBack()">Voltar</button>
     </div>
 
     <script>
-        const listaPalavras = ['ABACAXI', 'BANANA', 'CACHORRO', 'DINOSSAURO', 'ELEFANTE', 'FADA', 'GIRASSOL', 'HAMBURGUER', 'IGREJA', 'JANELA', 'KIWI', 'LAGARTO', 'MACACO', 'NUVEM', 'ORQUESTRA', 'PIRATA', 'QUEIJO', 'ROSA', 'SAPATO', 'TARTARUGA', 'UVA', 'VIOLAO', 'WATERPOLO', 'XADREZ', 'YOGURTE', 'ZEBRA', 'AVIAO', 'BICICLETA', 'CHUVEIRO', 'DADO', 'ELEVADOR', 'FOGUETE', 'GIRAFA', 'HELICOPTERO', 'ISQUEIRO', 'JACARE', 'LARANJA', 'MELANCIA', 'NARIZ', 'OCULOS', 'PINGUIM', 'QUADRO', 'RADIO', 'SORVETE', 'TELEFONE', 'URSO', 'VASSOURA', 'WIFI', 'XICARA', 'YOGA', 'ZUMBI', 'ARCOIRIS', 'BOLACHA', 'CADEIRA', 'DENTISTA', 'ESMALTE', 'FAROFA', 'GUITARRA', 'HORA', 'IMOVEL', 'JORNAL', 'LUA', 'MARTELO', 'NATAL', 'OVO', 'POTE', 'QUEBRACABECA', 'RELOGIO', 'SINO', 'TIGRE', 'UNHA', 'VELA', 'WHISKY', 'XEROX'];
-
-        let palavraEscolhida, exibicaoPalavra, letrasChutadas, tentativasRestantes, numeroErros;
-
-        function iniciarJogo() {
-            document.getElementById('botao-reiniciar').style.display = 'none';
-            document.getElementById('entrada-letra').disabled = false;
-            document.getElementById('mensagem').style.display = 'none';
-
-            palavraEscolhida = listaPalavras[Math.floor(Math.random() * listaPalavras.length)];
-            exibicaoPalavra = Array(palavraEscolhida.length).fill('_');
-            letrasChutadas = [];
-            tentativasRestantes = 7;
-            numeroErros = 0;
-
-            atualizarExibicao();
-        }
-
-        function atualizarExibicao() {
-            document.getElementById("exibicao-palavra").innerText = exibicaoPalavra.join(' ');
-            document.getElementById("letras-chutadas").innerText = letrasChutadas.join(', ');
-            document.getElementById("imagem").src = `forca${numeroErros}.png`;
-
-            if (numeroErros >= 7) {
-                encerrarJogo(`Você perdeu! A palavra era: ${palavraEscolhida}`);
-            } else if (!exibicaoPalavra.includes('_')) {
-                encerrarJogo('Parabéns! Você venceu!');
-            }
-        }
-
-        function chutarLetra() {
-            const entradaLetra = document.getElementById('entrada-letra');
-            let letra = entradaLetra.value.toUpperCase();
-
-            // Aceita letras acentuadas
-            if (!letra.match(/[A-ZÀ-ÁÂÃÄÅÆÇÈ-ÊËÌ-ÏÐÑÒ-ÖØÙ-ÜÝÞßà-áâãäåæçè-êëì-ïðñò-öøù-üýþÿ]/) || letra.length !== 1) {
-                alert('Por favor, insira uma única letra válida.');
-                return;
-            }
-
-            if (letrasChutadas.includes(letra)) {
-                alert('Você já tentou esta letra. Tente outra.');
-                return;
-            }
-
-            letrasChutadas.push(letra);
-            letrasChutadas.sort();
-
-            if (palavraEscolhida.includes(letra)) {
-                for (let i = 0; i < palavraEscolhida.length; i++) {
-                    if (palavraEscolhida[i] === letra) {
-                        exibicaoPalavra[i] = letra;
-                    }
-                }
-            } else {
-                numeroErros++;
-            }
-
-            entradaLetra.value = '';
-            atualizarExibicao();
-        }
-
-        function encerrarJogo(mensagem) {
-            document.getElementById('entrada-letra').disabled = true;
-            document.getElementById('mensagem').style.display = 'block';
-            document.getElementById('mensagem').innerText = mensagem;
-            document.getElementById('botao-reiniciar').style.display = 'block';
-        }
-
-        window.onload = function() {
-            iniciarJogo();
-            document.getElementById('entrada-letra').focus();
+        // --- CONFIGURAÇÕES E ESTADO GLOBAL ---
+        const state = {
+            currentStep: null,
+            currentString: null,
+            audioContext: null,
+            analyser: null,
+            mediaStream: null,
+            pitchDetector: null,
+            animationFrameId: null,
+            isTunerOn: false,
         };
 
-        document.getElementById('entrada-letra').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                chutarLetra();
+        const stringFrequencies = {
+            E6: { freq: 82.41, name: 'E' },
+            A5: { freq: 110.00, name: 'A' },
+            D4: { freq: 146.83, name: 'D' },
+            G3: { freq: 196.00, name: 'G' },
+            B2: { freq: 246.94, name: 'B' },
+            E1: { freq: 329.63, name: 'E' }
+        };
+        
+        const CENTS_THRESHOLD = 5; // Tolerância para afinação "perfeita"
+
+        // --- DADOS DO CONTEÚDO ---
+        const contentData = {
+            altura: {
+                title: 'Altura da Ponte e Cordas',
+                isInteractive: false,
+                html: `
+                    <p>Com a ponte totalmente encostada na madeira (decked), meça a distância da corda até o topo do 17º traste.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Medida</th>
+                                <th>Distância (Cordas Graves)</th>
+                                <th>Distância (Cordas Agudas)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>Padrão</b></td>
+                                <td><b>2.0 mm</b></td>
+                                <td><b>1.8 mm</b></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `
+            },
+            afinacao: { title: 'Afinar Corda Solta', isInteractive: true },
+            oitava: { title: 'Ajuste de Oitavas', isInteractive: true },
+            mola: {
+                title: 'Ajuste da Mola (Ponte Decked)',
+                isInteractive: false,
+                html: `
+                    <p>O objetivo é ter tensão suficiente nas molas para que a ponte fique <b>firme e encostada</b> na madeira, mesmo com a tensão das cordas.</p>
+                    <ul>
+                        <li>Use de 3 a 5 molas, dependendo do calibre das cordas e da sua preferência de "dureza" da alavanca.</li>
+                        <li><b>Aperte os parafusos</b> da garra das molas até que a base da ponte não levante do corpo da guitarra.</li>
+                        <li>O ideal é que a guitarra <b>volte à afinação correta</b> após usar a alavanca para baixar as notas (downbend).</li>
+                    </ul>
+                `
+            },
+            captador: {
+                title: 'Altura dos Captadores',
+                isInteractive: false,
+                html: `
+                    <p>Pressione a última casa e meça a distância do topo do captador até a parte de baixo da corda.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Medida</th>
+                                <th>Lado Grave (Mizona)</th>
+                                <th>Lado Agudo (Mizinha)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>Padrão</b></td>
+                                <td><b>2.8 mm</b></td>
+                                <td><b>2.0 mm</b></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `
             }
-        });
+        };
+
+        // --- ELEMENTOS DO DOM ---
+        const stepSelection = document.getElementById('step-selection');
+        const stringSelection = document.getElementById('string-selection');
+        const displayArea = document.getElementById('display-area');
+        const displayTitle = document.getElementById('display-title');
+        const infoContent = document.getElementById('info-content');
+        const tunerInterface = document.getElementById('tuner-interface');
+        const tunerElements = document.getElementById('tuner-elements');
+        const startTunerBtn = document.getElementById('start-tuner-btn');
+        const statusIndicator = document.getElementById('status-indicator');
+        const tunerReadout = document.getElementById('tuner-readout');
+        const instructionText = document.getElementById('instruction-text');
+        const resultText = document.getElementById('result-text');
+        const backButton = document.getElementById('back-button');
+
+        // --- FUNÇÕES PRINCIPAIS DA UI ---
+        function showStep(step) {
+            state.currentStep = step;
+            const data = contentData[step];
+            
+            stepSelection.classList.add('hidden');
+            displayArea.classList.remove('hidden');
+            backButton.classList.remove('hidden');
+            displayTitle.textContent = data.title;
+
+            if (data.isInteractive) {
+                tunerInterface.classList.remove('hidden');
+                infoContent.innerHTML = '';
+                stringSelection.classList.remove('hidden');
+                resetTunerDisplay();
+            } else {
+                infoContent.innerHTML = data.html;
+                tunerInterface.classList.add('hidden');
+                stringSelection.classList.add('hidden');
+            }
+        }
+
+        function selectString(element) {
+            state.currentString = element.dataset.string;
+            document.querySelectorAll('.string-selection button').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            
+            resetTunerDisplay();
+            let prompt = `Toque a corda ${stringFrequencies[state.currentString].name} solta.`;
+            if (state.currentStep === 'oitava') {
+                prompt = `Agora, toque a corda ${stringFrequencies[state.currentString].name} na 12ª casa.`;
+            }
+            instructionText.textContent = prompt;
+        }
+        
+        function goBack() {
+            stopTuner();
+            state.currentStep = null;
+            state.currentString = null;
+            
+            stepSelection.classList.remove('hidden');
+            displayArea.classList.add('hidden');
+            backButton.classList.add('hidden');
+            stringSelection.classList.add('hidden');
+            document.querySelectorAll('.string-selection button').forEach(btn => btn.classList.remove('active'));
+        }
+
+        // --- LÓGICA DO AFINADOR (WEB AUDIO API) ---
+        async function startTuner() {
+            if (state.isTunerOn) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                state.mediaStream = stream;
+                state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                state.analyser = state.audioContext.createAnalyser();
+                const source = state.audioContext.createMediaStreamSource(stream);
+                source.connect(state.analyser);
+                state.pitchDetector = PitchFinder.YIN({ sampleRate: state.audioContext.sampleRate });
+                state.isTunerOn = true;
+
+                startTunerBtn.classList.add('hidden');
+                tunerElements.classList.remove('hidden');
+                
+                updatePitch();
+
+            } catch (err) {
+                alert('Erro ao acessar o microfone. Por favor, verifique as permissões no seu navegador.');
+                console.error(err);
+            }
+        }
+        
+        function stopTuner() {
+            if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+            if (state.mediaStream) state.mediaStream.getTracks().forEach(track => track.stop());
+            if (state.audioContext) state.audioContext.close();
+            
+            state.isTunerOn = false;
+            startTunerBtn.classList.remove('hidden');
+            tunerElements.classList.add('hidden');
+            resetTunerDisplay();
+        }
+
+        function updatePitch() {
+            if (!state.isTunerOn) return;
+            
+            const buffer = new Float32Array(state.analyser.fftSize);
+            state.analyser.getFloatTimeDomainData(buffer);
+            const detectedPitch = state.pitchDetector(buffer);
+
+            if (detectedPitch && state.currentString) {
+                const targetFreq = (state.currentStep === 'oitava') 
+                    ? stringFrequencies[state.currentString].freq * 2 
+                    : stringFrequencies[state.currentString].freq;
+                
+                const cents = 1200 * Math.log2(detectedPitch / targetFreq);
+                tunerReadout.textContent = `Frequência: ${detectedPitch.toFixed(2)} Hz`;
+                updateTunerUI(cents);
+            } else {
+                tunerReadout.textContent = '...';
+            }
+
+            state.animationFrameId = requestAnimationFrame(updatePitch);
+        }
+
+        function updateTunerUI(cents) {
+            statusIndicator.className = 'status-indicator'; // Limpa classes
+            resultText.className = 'result-text';
+            
+            if (Math.abs(cents) <= CENTS_THRESHOLD) {
+                // Perfeito
+                statusIndicator.classList.add('green');
+                resultText.classList.add('green');
+                resultText.textContent = 'Perfeito!';
+                instructionText.textContent = (state.currentStep === 'afinacao') ? 'Corda Afiinada!' : 'Oitava Correta!';
+            } else if (cents < -CENTS_THRESHOLD) {
+                // Muito Baixo
+                statusIndicator.classList.add('yellow');
+                resultText.classList.add('yellow');
+                resultText.textContent = 'Muito Baixo';
+                if (state.currentStep === 'afinacao') instructionText.textContent = 'Aperte a tarracha';
+                if (state.currentStep === 'oitava') instructionText.textContent = 'Mova o carrinho para FRENTE (⬆️)';
+            } else if (cents > CENTS_THRESHOLD) {
+                // Muito Alto
+                statusIndicator.classList.add('blue');
+                resultText.classList.add('blue');
+                resultText.textContent = 'Muito Alto';
+                if (state.currentStep === 'afinacao') instructionText.textContent = 'Solte a tarracha';
+                if (state.currentStep === 'oitava') instructionText.textContent = 'Mova o carrinho para TRÁS (⬇️)';
+            }
+        }
+        
+        function resetTunerDisplay() {
+            statusIndicator.className = 'status-indicator';
+            resultText.textContent = '';
+            tunerReadout.textContent = '';
+            instructionText.textContent = 'Selecione uma corda para começar.';
+        }
+
     </script>
 </body>
 </html>
